@@ -51,6 +51,11 @@ paths:
         '500':
           description: Internal server error
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     UserRegistration:
       type: object
@@ -81,3 +86,5 @@ components:
         token:
           type: string
           description: Authentication token
+security:
+  - BearerAuth: []

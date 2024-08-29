@@ -29,6 +29,9 @@
             }
           }
         },
+        "tags": [
+          "comment"
+        ],
         "operationId": "listComments",
         "summary": "List all comments for a blog post"
       },
@@ -66,6 +69,14 @@
             "description": "Internal server error"
           }
         },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "comment"
+        ],
         "operationId": "addComment",
         "summary": "Add a comment to a blog post"
       }
@@ -109,5 +120,23 @@
       "type": "object"
     }
   },
+  "securityDefinitions": {
+    "BearerAuth": {
+      "in": "header",
+      "name": "Authorization",
+      "type": "apiKey"
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "description": "Operations related to comments on posts",
+      "name": "comment"
+    }
+  ],
   "x-components": {}
 }

@@ -13,6 +13,9 @@
         "produces": [
           "application/json"
         ],
+        "tags": [
+          "user"
+        ],
         "summary": "Login a user",
         "operationId": "loginUser",
         "parameters": [
@@ -49,6 +52,9 @@
         "produces": [
           "application/json"
         ],
+        "tags": [
+          "post"
+        ],
         "summary": "List all blog posts",
         "operationId": "listPosts",
         "responses": {
@@ -64,8 +70,16 @@
         }
       },
       "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
         "consumes": [
           "application/json"
+        ],
+        "tags": [
+          "post"
         ],
         "summary": "Create a new blog post",
         "operationId": "createPost",
@@ -100,6 +114,9 @@
         "produces": [
           "application/json"
         ],
+        "tags": [
+          "post"
+        ],
         "summary": "Get blog post details by ID",
         "operationId": "getPostById",
         "parameters": [
@@ -125,6 +142,9 @@
       "put": {
         "consumes": [
           "application/json"
+        ],
+        "tags": [
+          "post"
         ],
         "summary": "Update a blog post",
         "operationId": "updatePost",
@@ -160,6 +180,9 @@
         }
       },
       "delete": {
+        "tags": [
+          "post"
+        ],
         "summary": "Delete a blog post",
         "operationId": "deletePost",
         "parameters": [
@@ -185,6 +208,9 @@
         "produces": [
           "application/json"
         ],
+        "tags": [
+          "comment"
+        ],
         "summary": "List all comments for a blog post",
         "operationId": "listComments",
         "parameters": [
@@ -208,8 +234,16 @@
         }
       },
       "post": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
         "consumes": [
           "application/json"
+        ],
+        "tags": [
+          "comment"
         ],
         "summary": "Add a comment to a blog post",
         "operationId": "addComment",
@@ -250,6 +284,9 @@
         "consumes": [
           "application/json"
         ],
+        "tags": [
+          "user"
+        ],
         "summary": "Register a new user",
         "operationId": "registerUser",
         "parameters": [
@@ -281,6 +318,7 @@
       "type": "object",
       "properties": {
         "token": {
+          "description": "Authentication token",
           "type": "string"
         }
       }
@@ -407,5 +445,31 @@
       }
     }
   },
+  "securityDefinitions": {
+    "BearerAuth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "description": "Operations related to blog posts",
+      "name": "post"
+    },
+    {
+      "description": "Operations related to comments on posts",
+      "name": "comment"
+    },
+    {
+      "description": "Operations related to user management",
+      "name": "user"
+    }
+  ],
   "x-components": {}
 }
