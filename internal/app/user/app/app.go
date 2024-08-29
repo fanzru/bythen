@@ -1,34 +1,48 @@
 package app
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/fanzru/bythen/internal/app/user/model"
 	"github.com/fanzru/bythen/internal/app/user/repo"
+	"github.com/golang-jwt/jwt"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserServiceImpl interface {
-	CreateUser(request *model.CreateUserRequest) (*model.CreateUserResponse, error)
+	CreateUser(ctx context.Context, request *model.CreateUserRequest) (*model.CreateUserResponse, error)
+	LoginUser(ctx context.Context, request *model.UserLoginRequest) (*model.AuthTokenResponse, error)
 }
 
 type UserService struct {
-	repo repo.UserRepository
+	repo repo.UserRepositoryImpl
 }
 
-func NewUserService(repo repo.UserRepository) *UserService {
+func NewUserService(repo repo.UserRepositoryImpl) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) CreateUser(request *model.CreateUserRequest) (*model.CreateUserResponse, error) {
+// CreateUser handles the registration of a new user
+func (s *UserService) CreateUser(ctx context.Context, request *model.CreateUserRequest) (*model.CreateUserResponse, error) {
+	// Hash the user's password
+	hashedPassword, err := hashPassword(request.Password)
+	if err != nil {
+		return nil, err
+	}
+
 	user := &model.User{
 		Name:      request.Name,
 		Email:     request.Email,
-		Password:  hashPassword(request.Password), // Implement a hashPassword function
+		Password:  hashedPassword,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
 
-	id, err := s.repo.CreateUser(user)
+	// Create the user in the database
+	id, err := s.repo.CreateUser(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -40,9 +54,53 @@ func (s *UserService) CreateUser(request *model.CreateUserRequest) (*model.Creat
 	}, nil
 }
 
-// Add more business logic methods as needed
+// LoginUser handles user authentication and returns a JWT token if successful
+func (s *UserService) LoginUser(ctx context.Context, request *model.UserLoginRequest) (*model.AuthTokenResponse, error) {
+	// Find the user by email
+	user, err := s.repo.GetUserByEmail(ctx, request.Email)
+	if err != nil {
+		return nil, errors.New("invalid credentials")
+	}
 
-func hashPassword(password string) string {
-	// Implement your password hashing logic here
-	return password // This is just a placeholder
+	// Compare the provided password with the stored hashed password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
+		return nil, errors.New("invalid credentials")
+	}
+
+	// Generate a JWT token
+	token, err := generateJWT(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.AuthTokenResponse{
+		Token: token,
+	}, nil
+}
+
+// hashPassword hashes the user's password using bcrypt
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bytes), err
+}
+
+// generateJWT generates a JWT token for the authenticated user
+func generateJWT(user *model.User) (string, error) {
+	// Define JWT claims
+	claims := &jwt.StandardClaims{
+		Subject:   fmt.Sprintf("%v", user.ID),
+		IssuedAt:  time.Now().Unix(),
+		ExpiresAt: time.Now().Add(time.Hour * 72).Unix(), // Token expires after 72 hours
+	}
+
+	// Create a new token with the claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign the token with a secret key (ensure to use a strong key in production)
+	tokenString, err := token.SignedString([]byte("your-secret-key"))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }
