@@ -2,11 +2,18 @@ openapi: 3.0.0
 info:
   title: Comment API
   version: 1.0.0
+tags:
+  - name: comment
+    description: Operations related to comments on posts
 paths:
   /posts/{id}/comments:
     post:
+      tags:
+        - comment
       summary: Add a comment to a blog post
       operationId: addComment
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
@@ -29,6 +36,8 @@ paths:
         '500':
           description: Internal server error
     get:
+      tags:
+        - comment
       summary: List all comments for a blog post
       operationId: listComments
       parameters:
@@ -47,6 +56,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/Comment'
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     NewComment:
       type: object
@@ -72,3 +86,5 @@ components:
         created_at:
           type: string
           format: date-time
+security:
+  - BearerAuth: []

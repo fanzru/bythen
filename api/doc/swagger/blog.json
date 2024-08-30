@@ -22,6 +22,9 @@
             }
           }
         },
+        "tags": [
+          "post"
+        ],
         "operationId": "listPosts",
         "summary": "List all blog posts"
       },
@@ -53,6 +56,14 @@
             "description": "Internal server error"
           }
         },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "post"
+        ],
         "operationId": "createPost",
         "summary": "Create a new blog post"
       }
@@ -75,6 +86,9 @@
             "description": "Post not found"
           }
         },
+        "tags": [
+          "post"
+        ],
         "operationId": "deletePost",
         "summary": "Delete a blog post"
       },
@@ -101,6 +115,9 @@
             "description": "Post not found"
           }
         },
+        "tags": [
+          "post"
+        ],
         "operationId": "getPostById",
         "summary": "Get blog post details by ID"
       },
@@ -138,6 +155,9 @@
             "description": "Post not found"
           }
         },
+        "tags": [
+          "post"
+        ],
         "operationId": "updatePost",
         "summary": "Update a blog post"
       }
@@ -196,5 +216,23 @@
       "type": "object"
     }
   },
+  "securityDefinitions": {
+    "BearerAuth": {
+      "in": "header",
+      "name": "Authorization",
+      "type": "apiKey"
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "description": "Operations related to blog posts",
+      "name": "post"
+    }
+  ],
   "x-components": {}
 }

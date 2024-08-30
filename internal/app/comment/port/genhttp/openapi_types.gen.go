@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+const (
+	BearerAuthScopes = "BearerAuth.Scopes"
+)
+
 // Comment defines model for Comment.
 type Comment struct {
 	AuthorName *string    `json:"author_name,omitempty"`

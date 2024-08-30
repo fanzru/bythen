@@ -8,7 +8,7 @@ import (
 
 	"github.com/fanzru/bythen/internal/app/user/model"
 	"github.com/fanzru/bythen/internal/app/user/repo"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -18,11 +18,12 @@ type UserServiceImpl interface {
 }
 
 type UserService struct {
-	repo repo.UserRepositoryImpl
+	repo      repo.UserRepositoryImpl
+	secretKey string
 }
 
-func NewUserService(repo repo.UserRepositoryImpl) *UserService {
-	return &UserService{repo: repo}
+func NewUserService(repo repo.UserRepositoryImpl, secretKey string) *UserService {
+	return &UserService{repo: repo, secretKey: secretKey}
 }
 
 // CreateUser handles the registration of a new user
@@ -68,7 +69,7 @@ func (s *UserService) LoginUser(ctx context.Context, request *model.UserLoginReq
 	}
 
 	// Generate a JWT token
-	token, err := generateJWT(user)
+	token, err := s.generateJWT(user)
 	if err != nil {
 		return nil, err
 	}
@@ -85,19 +86,21 @@ func hashPassword(password string) (string, error) {
 }
 
 // generateJWT generates a JWT token for the authenticated user
-func generateJWT(user *model.User) (string, error) {
+func (s *UserService) generateJWT(user *model.User) (string, error) {
 	// Define JWT claims
-	claims := &jwt.StandardClaims{
-		Subject:   fmt.Sprintf("%v", user.ID),
-		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().Add(time.Hour * 72).Unix(), // Token expires after 72 hours
-	}
+	claims := &model.JWTClaims{
+		UserID: user.ID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   fmt.Sprintf("%v", user.ID),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+		}}
 
 	// Create a new token with the claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	// Sign the token with a secret key (ensure to use a strong key in production)
-	tokenString, err := token.SignedString([]byte("your-secret-key"))
+	// Sign the token with a secret key
+	tokenString, err := token.SignedString([]byte(s.secretKey))
 	if err != nil {
 		return "", err
 	}

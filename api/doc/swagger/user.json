@@ -40,6 +40,9 @@
             "description": "Internal server error"
           }
         },
+        "tags": [
+          "user"
+        ],
         "operationId": "loginUser",
         "summary": "Login a user"
       }
@@ -70,6 +73,9 @@
             "description": "Internal server error"
           }
         },
+        "tags": [
+          "user"
+        ],
         "operationId": "registerUser",
         "summary": "Register a new user"
       }
@@ -79,6 +85,7 @@
     "AuthToken": {
       "properties": {
         "token": {
+          "description": "Authentication token",
           "type": "string"
         }
       },
@@ -119,5 +126,11 @@
       "type": "object"
     }
   },
+  "tags": [
+    {
+      "description": "Operations related to user management",
+      "name": "user"
+    }
+  ],
   "x-components": {}
 }

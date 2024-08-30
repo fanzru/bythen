@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // User represents a user in the system
@@ -44,5 +44,5 @@ type AuthTokenResponse struct {
 // JWTClaims represents the claims for the JWT token
 type JWTClaims struct {
 	UserID int64 `json:"user_id"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }

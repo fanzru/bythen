@@ -5,6 +5,7 @@ package genhttp
 
 // AuthToken defines model for AuthToken.
 type AuthToken struct {
+	// Token Authentication token
 	Token *string `json:"token,omitempty"`
 }
 
