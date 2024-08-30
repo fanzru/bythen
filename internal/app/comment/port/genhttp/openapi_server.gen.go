@@ -49,6 +49,8 @@ func (siw *ServerInterfaceWrapper) ListComments(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListComments(w, r, id)
 	}))
@@ -74,6 +76,8 @@ func (siw *ServerInterfaceWrapper) AddComment(w http.ResponseWriter, r *http.Req
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
 		return
 	}
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.AddComment(w, r, id)

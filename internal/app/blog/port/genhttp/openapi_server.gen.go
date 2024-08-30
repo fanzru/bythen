@@ -47,6 +47,8 @@ type MiddlewareFunc func(http.Handler) http.Handler
 func (siw *ServerInterfaceWrapper) ListPosts(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListPosts(w, r)
 	}))
@@ -61,6 +63,8 @@ func (siw *ServerInterfaceWrapper) ListPosts(w http.ResponseWriter, r *http.Requ
 // CreatePost operation middleware
 func (siw *ServerInterfaceWrapper) CreatePost(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreatePost(w, r)
@@ -88,6 +92,8 @@ func (siw *ServerInterfaceWrapper) DeletePost(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DeletePost(w, r, id)
 	}))
@@ -114,6 +120,8 @@ func (siw *ServerInterfaceWrapper) GetPostById(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetPostById(w, r, id)
 	}))
@@ -139,6 +147,8 @@ func (siw *ServerInterfaceWrapper) UpdatePost(w http.ResponseWriter, r *http.Req
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
 		return
 	}
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UpdatePost(w, r, id)

@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/fanzru/bythen/internal/app/user/app"
@@ -14,6 +16,7 @@ import (
 	"github.com/fanzru/bythen/internal/app/user/repo"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/joho/godotenv"
 	"github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
 )
 
@@ -66,25 +69,35 @@ func authMiddleware(secretKey string) nethttp.StrictHTTPMiddlewareFunc {
 	}
 }
 
-func main() {
-	// Load the JWT secret key from the environment
-	// secretKey := os.Getenv("JWT_SECRET_KEY")
-	// if secretKey == "" {
-	// 	log.Fatal("JWT_SECRET_KEY environment variable is not set")
-	// }
+// Function to load environment variables with default values
+func getEnv(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
+}
 
-	secretKey := "secretkey"
+func main() {
+	// Load the .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	// Load environment variables
+	secretKey := getEnv("JWT_SECRET_KEY", "default-secret-key")
+	dsn := getEnv("DATABASE_DSN", "user:password@tcp(localhost:3306)/dbname")
 
 	// Initialize the database connection
-	// dsn := "your-dsn-here" // replace with your actual DSN
-	// db, err := sql.Open("mysql", dsn)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer db.Close()
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
 
 	// Initialize the UserRepository and UserService
-	userRepo := repo.NewUserRepository(nil)
+	userRepo := repo.NewUserRepository(db)
 	userService := app.NewUserService(userRepo, secretKey)
 	userHandler := port.NewUserHandler(userService)
 
@@ -92,7 +105,6 @@ func main() {
 	strictServer := genhttp.NewStrictHandler(userHandler, []nethttp.StrictHTTPMiddlewareFunc{
 		loggingMiddleware,
 		timeoutMiddleware,
-		authMiddleware(secretKey), // Apply authentication middleware
 	})
 
 	// Create a new ServeMux
@@ -105,7 +117,7 @@ func main() {
 	mux.Handle("/doc/swagger/", http.StripPrefix("/doc/swagger", http.FileServer(http.Dir("./docs/swagger"))))
 
 	// Add the strict server to the mux
-	mux.Handle("/api/", handler)
+	mux.Handle("/", handler)
 
 	// Start the HTTP server
 	addr := ":8080"
