@@ -43,7 +43,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthToken'
+                $ref: '#/components/schemas/LoginResponse'
         '400':
           description: Bad request
         '401':
@@ -75,9 +75,37 @@ components:
       required:
         - email
         - password
-    AuthToken:
+    LoginResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
       type: object
       properties:
         token:
           type: string
-          description: Authentication token
+      required:
+        - token
+    Error:
+      allOf:
+        - type: object
+          required:
+            - message
+          properties:
+            message:
+              type: string
+              example: "unexpected error"
+        - $ref: '#/components/schemas/BaseResponse'
+    BaseResponse:
+      required:
+        - serverTime
+        - code
+        - data
+      type: object
+      properties:
+        serverTime:
+          type: integer
+          example: 1616048032
+        data:
+          type: object
+        code:
+          type: string
+          example: "SUCCESS"

@@ -10,7 +10,7 @@ for file in ./api/http/*.yaml; do
         api/http/$f.yaml 
 
     # Generate std-http with strict-server option
-    oapi-codegen -generate std-http,strict-server \
+    oapi-codegen -generate std-http \
         -o ./internal/app/$f/port/genhttp/openapi_server.gen.go \
         -package genhttp \
         api/http/$f.yaml 

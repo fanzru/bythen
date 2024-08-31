@@ -17,34 +17,33 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/joho/godotenv"
-	"github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
 )
 
 // Middleware function to log request details
-func loggingMiddleware(next nethttp.StrictHTTPHandlerFunc, operationID string) nethttp.StrictHTTPHandlerFunc {
-	return func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Received %s request for %s", r.Method, r.URL.Path)
-		return next(ctx, w, r, request)
-	}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // Middleware function to set a request timeout
-func timeoutMiddleware(next nethttp.StrictHTTPHandlerFunc, operationID string) nethttp.StrictHTTPHandlerFunc {
-	return func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+func timeoutMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 		defer cancel()
-		return next(ctx, w, r.WithContext(ctx), request)
-	}
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 // Middleware to authenticate using JWT tokens
-func authMiddleware(secretKey string) nethttp.StrictHTTPMiddlewareFunc {
-	return func(next nethttp.StrictHTTPHandlerFunc, operationID string) nethttp.StrictHTTPHandlerFunc {
-		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+func authMiddleware(secretKey string) genhttp.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
 				http.Error(w, "Missing Authorization header", http.StatusUnauthorized)
-				return nil, nil
+				return
 			}
 
 			tokenString := authHeader[len("Bearer "):]
@@ -59,13 +58,16 @@ func authMiddleware(secretKey string) nethttp.StrictHTTPMiddlewareFunc {
 
 			if err != nil || !token.Valid {
 				http.Error(w, "Invalid token", http.StatusUnauthorized)
-				return nil, nil
+				return
 			}
 
-			ctx = context.WithValue(ctx, "userID", claims.UserID)
+			type contextKey string
 
-			return next(ctx, w, r, request)
-		}
+			const userIDKey contextKey = "userID"
+
+			ctx := context.WithValue(r.Context(), userIDKey, claims.UserID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
 	}
 }
 
@@ -101,28 +103,28 @@ func main() {
 	userService := app.NewUserService(userRepo, secretKey)
 	userHandler := port.NewUserHandler(userService)
 
-	// Create a new StrictHandler with middlewares
-	strictServer := genhttp.NewStrictHandler(userHandler, []nethttp.StrictHTTPMiddlewareFunc{
-		loggingMiddleware,
-		timeoutMiddleware,
-	})
+	// Create a new ServerInterface implementation
+	serverInterface := &genhttp.ServerInterfaceWrapper{
+		Handler: userHandler,
+		HandlerMiddlewares: []genhttp.MiddlewareFunc{
+			loggingMiddleware,
+			timeoutMiddleware,
+		},
+	}
 
 	// Create a new ServeMux
 	mux := http.NewServeMux()
 
-	// Wrap the strict server in an http.Handler
-	handler := genhttp.HandlerWithOptions(strictServer, genhttp.StdHTTPServerOptions{})
+	// Wrap the server in an http.Handler
+	handler := genhttp.HandlerFromMux(serverInterface, mux)
 
 	// Serve the Swagger UI
 	mux.Handle("/doc/swagger/", http.StripPrefix("/doc/swagger", http.FileServer(http.Dir("./docs/swagger"))))
 
-	// Add the strict server to the mux
-	mux.Handle("/", handler)
-
 	// Start the HTTP server
 	addr := ":8080"
 	log.Printf("Server is running on %s", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
+	if err := http.ListenAndServe(addr, handler); err != nil {
 		log.Fatalf("could not start server: %s", err)
 	}
 }
