@@ -12,6 +12,7 @@
         ],
         "parameters": [
           {
+            "format": "int64",
             "in": "path",
             "name": "id",
             "required": true,
@@ -41,6 +42,7 @@
         ],
         "parameters": [
           {
+            "format": "in64",
             "in": "path",
             "name": "id",
             "required": true,
@@ -85,8 +87,9 @@
   "definitions": {
     "Comment": {
       "properties": {
-        "author_name": {
-          "type": "string"
+        "author_id": {
+          "format": "int64",
+          "type": "integer"
         },
         "content": {
           "type": "string"
@@ -96,9 +99,11 @@
           "type": "string"
         },
         "id": {
+          "format": "int64",
           "type": "integer"
         },
         "post_id": {
+          "format": "int64",
           "type": "integer"
         }
       },
@@ -106,15 +111,11 @@
     },
     "NewComment": {
       "properties": {
-        "author_name": {
-          "type": "string"
-        },
         "content": {
           "type": "string"
         }
       },
       "required": [
-        "author_name",
         "content"
       ],
       "type": "object"

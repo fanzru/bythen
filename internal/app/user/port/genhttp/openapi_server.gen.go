@@ -13,10 +13,10 @@ import (
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Login a user
-	// (POST /login)
+	// (POST /user/login)
 	LoginUser(w http.ResponseWriter, r *http.Request)
 	// Register a new user
-	// (POST /register)
+	// (POST /user/register)
 	RegisterUser(w http.ResponseWriter, r *http.Request)
 }
 
@@ -173,8 +173,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
-	m.HandleFunc("POST "+options.BaseURL+"/login", wrapper.LoginUser)
-	m.HandleFunc("POST "+options.BaseURL+"/register", wrapper.RegisterUser)
+	m.HandleFunc("POST "+options.BaseURL+"/user/login", wrapper.LoginUser)
+	m.HandleFunc("POST "+options.BaseURL+"/user/register", wrapper.RegisterUser)
 
 	return m
 }

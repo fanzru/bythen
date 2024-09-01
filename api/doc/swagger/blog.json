@@ -1,11 +1,11 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Blog API",
+    "title": "API Documentation",
     "version": "1.0.0"
   },
   "paths": {
-    "/posts": {
+    "/blog/posts": {
       "get": {
         "produces": [
           "application/json"
@@ -20,6 +20,12 @@
               },
               "type": "array"
             }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         },
         "tags": [
@@ -30,6 +36,9 @@
       },
       "post": {
         "consumes": [
+          "application/json"
+        ],
+        "produces": [
           "application/json"
         ],
         "parameters": [
@@ -44,16 +53,28 @@
         ],
         "responses": {
           "201": {
-            "description": "Post created"
+            "description": "Post created successfully",
+            "schema": {
+              "$ref": "#/definitions/Post"
+            }
           },
           "400": {
-            "description": "Bad request"
+            "description": "Invalid request body",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         },
         "security": [
@@ -68,10 +89,14 @@
         "summary": "Create a new blog post"
       }
     },
-    "/posts/{id}": {
+    "/blog/posts/{id}": {
       "delete": {
+        "produces": [
+          "application/json"
+        ],
         "parameters": [
           {
+            "format": "int64",
             "in": "path",
             "name": "id",
             "required": true,
@@ -80,12 +105,26 @@
         ],
         "responses": {
           "204": {
-            "description": "Post deleted"
+            "description": "Post deleted successfully"
           },
           "404": {
-            "description": "Post not found"
+            "description": "Post not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
         "tags": [
           "post"
         ],
@@ -98,6 +137,7 @@
         ],
         "parameters": [
           {
+            "format": "int64",
             "in": "path",
             "name": "id",
             "required": true,
@@ -112,7 +152,16 @@
             }
           },
           "404": {
-            "description": "Post not found"
+            "description": "Post not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         },
         "tags": [
@@ -125,8 +174,12 @@
         "consumes": [
           "application/json"
         ],
+        "produces": [
+          "application/json"
+        ],
         "parameters": [
           {
+            "format": "int64",
             "in": "path",
             "name": "id",
             "required": true,
@@ -143,18 +196,41 @@
         ],
         "responses": {
           "200": {
-            "description": "Post updated"
+            "description": "Post updated successfully",
+            "schema": {
+              "$ref": "#/definitions/Post"
+            }
           },
           "400": {
-            "description": "Bad request"
+            "description": "Invalid request body",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           },
           "404": {
-            "description": "Post not found"
+            "description": "Post not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
         "tags": [
           "post"
         ],
@@ -164,6 +240,23 @@
     }
   },
   "definitions": {
+    "Error": {
+      "properties": {
+        "code": {
+          "example": 500,
+          "type": "integer"
+        },
+        "details": {
+          "example": "Detailed error description",
+          "type": "string"
+        },
+        "message": {
+          "example": "unexpected error",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "NewPost": {
       "properties": {
         "content": {
@@ -213,6 +306,29 @@
           "type": "string"
         }
       },
+      "required": [
+        "title",
+        "content"
+      ],
+      "type": "object"
+    },
+    "UserRegistration": {
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "email",
+        "password"
+      ],
       "type": "object"
     }
   },

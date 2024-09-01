@@ -6,7 +6,7 @@ tags:
   - name: user
     description: Operations related to user management
 paths:
-  /register:
+  /user/register:
     post:
       tags:
         - user
@@ -25,7 +25,7 @@ paths:
           description: Bad request
         '500':
           description: Internal server error
-  /login:
+  /user/login:
     post:
       tags:
         - user

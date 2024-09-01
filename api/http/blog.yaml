@@ -1,12 +1,12 @@
 openapi: 3.0.0
 info:
-  title: Blog API
+  title: API Documentation
   version: 1.0.0
 tags:
   - name: post
     description: Operations related to blog posts
 paths:
-  /posts:
+  /blog/posts:
     post:
       tags:
         - post
@@ -22,13 +22,29 @@ paths:
               $ref: '#/components/schemas/NewPost'
       responses:
         '201':
-          description: Post created
+          description: Post created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
         '400':
-          description: Bad request
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     get:
       tags:
         - post
@@ -43,7 +59,13 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Post'
-  /posts/{id}:
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /blog/posts/{id}:
     get:
       tags:
         - post
@@ -55,6 +77,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
       responses:
         '200':
           description: Post details
@@ -64,17 +87,30 @@ paths:
                 $ref: '#/components/schemas/Post'
         '404':
           description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     put:
       tags:
         - post
       summary: Update a blog post
       operationId: updatePost
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: integer
+            format: int64
       requestBody:
         required: true
         content:
@@ -83,36 +119,85 @@ paths:
               $ref: '#/components/schemas/UpdatePost'
       responses:
         '200':
-          description: Post updated
+          description: Post updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
         '400':
-          description: Bad request
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '404':
           description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     delete:
       tags:
         - post
       summary: Delete a blog post
       operationId: deletePost
+      security:
+        - BearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: integer
+            format: int64
       responses:
         '204':
-          description: Post deleted
+          description: Post deleted successfully
         '404':
           description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   securitySchemes:
-    BearerAuth:
+    BearerAuth:            # arbitrary name for the security scheme
       type: http
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    UserRegistration:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - name
+        - email
+        - password
     NewPost:
       type: object
       properties:
@@ -125,6 +210,9 @@ components:
         - content
     UpdatePost:
       type: object
+      required:
+        - title
+        - content
       properties:
         title:
           type: string
@@ -147,5 +235,17 @@ components:
         updated_at:
           type: string
           format: date-time
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "unexpected error"
+        code:
+          type: integer
+          example: 500
+        details:
+          type: string
+          example: "Detailed error description"
 security:
   - BearerAuth: []

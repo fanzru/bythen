@@ -19,9 +19,7 @@ type Error struct {
 }
 
 // LoginResponse defines model for LoginResponse.
-type LoginResponse struct {
-	Token string `json:"token"`
-}
+type LoginResponse = BaseResponse
 
 // UserLogin defines model for UserLogin.
 type UserLogin struct {

@@ -13,17 +13,16 @@ const (
 
 // Comment defines model for Comment.
 type Comment struct {
-	AuthorName *string    `json:"author_name,omitempty"`
-	Content    *string    `json:"content,omitempty"`
-	CreatedAt  *time.Time `json:"created_at,omitempty"`
-	Id         *int       `json:"id,omitempty"`
-	PostId     *int       `json:"post_id,omitempty"`
+	AuthorId  *int64     `json:"author_id,omitempty"`
+	Content   *string    `json:"content,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	Id        *int64     `json:"id,omitempty"`
+	PostId    *int64     `json:"post_id,omitempty"`
 }
 
 // NewComment defines model for NewComment.
 type NewComment struct {
-	AuthorName string `json:"author_name"`
-	Content    string `json:"content"`
+	Content string `json:"content"`
 }
 
 // AddCommentJSONRequestBody defines body for AddComment for application/json ContentType.

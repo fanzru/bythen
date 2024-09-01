@@ -9,11 +9,20 @@ import (
 	"os"
 	"time"
 
-	"github.com/fanzru/bythen/internal/app/user/app"
+	blogApp "github.com/fanzru/bythen/internal/app/blog/app"
+	blogPort "github.com/fanzru/bythen/internal/app/blog/port"
+	blogGenhttp "github.com/fanzru/bythen/internal/app/blog/port/genhttp"
+	blogRepo "github.com/fanzru/bythen/internal/app/blog/repo"
+	userApp "github.com/fanzru/bythen/internal/app/user/app"
 	"github.com/fanzru/bythen/internal/app/user/model"
-	"github.com/fanzru/bythen/internal/app/user/port"
-	"github.com/fanzru/bythen/internal/app/user/port/genhttp"
-	"github.com/fanzru/bythen/internal/app/user/repo"
+	userPort "github.com/fanzru/bythen/internal/app/user/port"
+	userGenhttp "github.com/fanzru/bythen/internal/app/user/port/genhttp"
+	userRepo "github.com/fanzru/bythen/internal/app/user/repo"
+
+	commentApp "github.com/fanzru/bythen/internal/app/comment/app"
+	commentPort "github.com/fanzru/bythen/internal/app/comment/port"
+	commentGenhttp "github.com/fanzru/bythen/internal/app/comment/port/genhttp"
+	commentRepo "github.com/fanzru/bythen/internal/app/comment/repo"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/joho/godotenv"
@@ -23,7 +32,7 @@ import (
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Received %s request for %s", r.Method, r.URL.Path)
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r.WithContext(r.Context()))
 	})
 }
 
@@ -37,7 +46,7 @@ func timeoutMiddleware(next http.Handler) http.Handler {
 }
 
 // Middleware to authenticate using JWT tokens
-func authMiddleware(secretKey string) genhttp.MiddlewareFunc {
+func authMiddleware(secretKey string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -55,20 +64,34 @@ func authMiddleware(secretKey string) genhttp.MiddlewareFunc {
 				}
 				return []byte(secretKey), nil
 			})
-
 			if err != nil || !token.Valid {
 				http.Error(w, "Invalid token", http.StatusUnauthorized)
 				return
 			}
 
-			type contextKey string
-
-			const userIDKey contextKey = "userID"
-
+			const userIDKey string = "userID"
 			ctx := context.WithValue(r.Context(), userIDKey, claims.UserID)
 			next.ServeHTTP(w, r.WithContext(ctx))
+
 		})
 	}
+}
+
+// Middleware to handle CORS
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// If the request is for OPTIONS, stop there
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 // Function to load environment variables with default values
@@ -99,32 +122,62 @@ func main() {
 	defer db.Close()
 
 	// Initialize the UserRepository and UserService
-	userRepo := repo.NewUserRepository(db)
-	userService := app.NewUserService(userRepo, secretKey)
-	userHandler := port.NewUserHandler(userService)
+	userRepo := userRepo.NewUserRepository(db)
+	userService := userApp.NewUserService(userRepo, secretKey)
+	userHandler := userPort.NewUserHandler(userService)
 
-	// Create a new ServerInterface implementation
-	serverInterface := &genhttp.ServerInterfaceWrapper{
-		Handler: userHandler,
-		HandlerMiddlewares: []genhttp.MiddlewareFunc{
-			loggingMiddleware,
-			timeoutMiddleware,
-		},
-	}
+	// Initialize the BlogRepository and BlogService
+	blogRepo := blogRepo.NewPostRepository(db)
+	blogService := blogApp.NewPostService(blogRepo)
+	blogHandler := blogPort.NewPostHandler(blogService)
+
+	// Initialize the CommentRepository and CommentService
+	commentRepo := commentRepo.NewCommentRepository(db)
+	commentService := commentApp.NewCommentService(commentRepo)
+	commentHandler := commentPort.NewCommentHandler(commentService)
 
 	// Create a new ServeMux
 	mux := http.NewServeMux()
 
-	// Wrap the server in an http.Handler
-	handler := genhttp.HandlerFromMux(serverInterface, mux)
+	// Register the user routes with middlewares applied
+	userGenhttp.HandlerWithOptions(userHandler, userGenhttp.StdHTTPServerOptions{
+		BaseRouter: mux,
+		Middlewares: []userGenhttp.MiddlewareFunc{
+			loggingMiddleware,
+			timeoutMiddleware,
+		},
+	})
+
+	// Register the blog routes with middlewares including auth middleware applied
+	blogGenhttp.HandlerWithOptions(blogHandler, blogGenhttp.StdHTTPServerOptions{
+		BaseRouter: mux,
+		Middlewares: []blogGenhttp.MiddlewareFunc{
+			loggingMiddleware,
+			timeoutMiddleware,
+			authMiddleware(secretKey),
+		},
+	})
+
+	// Register the comment routes with middlewares including auth middleware applied
+	commentGenhttp.HandlerWithOptions(commentHandler, commentGenhttp.StdHTTPServerOptions{
+		BaseRouter: mux,
+		Middlewares: []commentGenhttp.MiddlewareFunc{
+			loggingMiddleware,
+			timeoutMiddleware,
+			authMiddleware(secretKey),
+		},
+	})
+
+	// Apply CORS middleware
+	corsMux := corsMiddleware(mux)
 
 	// Serve the Swagger UI
-	mux.Handle("/doc/swagger/", http.StripPrefix("/doc/swagger", http.FileServer(http.Dir("./docs/swagger"))))
+	mux.Handle("/doc/swagger/", http.StripPrefix("/doc/swagger", http.FileServer(http.Dir("/app/docs/swagger"))))
 
 	// Start the HTTP server
 	addr := ":8080"
 	log.Printf("Server is running on %s", addr)
-	if err := http.ListenAndServe(addr, handler); err != nil {
+	if err := http.ListenAndServe(addr, corsMux); err != nil {
 		log.Fatalf("could not start server: %s", err)
 	}
 }
