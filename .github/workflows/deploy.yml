@@ -32,23 +32,18 @@ jobs:
     needs: build
 
     steps:
-      - name: Install sshpass
-        run: sudo apt-get install -y sshpass
-
-      - name: Deploy to VM
-        env:
-          VM_SSH_USER: ${{ secrets.VM_USERNAME }}
-          VM_IP: ${{ secrets.VM_HOST }}
-          VM_SSH_PASSWORD: ${{ secrets.VM_PASSWORD }}
-          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-          DATABASE_DSN: ${{ secrets.DATABASE_DSN }}
-        run: |
-          sshpass -p "$VM_SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $VM_SSH_USER@$VM_IP << EOF
-            cd ~/blog-app
-            echo "JWT_SECRET_KEY=$JWT_SECRET_KEY" > .env
-            echo "DATABASE_DSN=$DATABASE_DSN" >> .env
+      - name: Deploy to VM via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ${{ secrets.VM_SSH_USER }}
+          password: ${{ secrets.VM_SSH_PASSWORD }}
+          port: 22
+          script: |
+            cd ~/blog-app || exit
+            echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" > .env
+            echo "DATABASE_DSN=${{ secrets.DATABASE_DSN }}" >> .env
             docker pull fanzru/blog-app:latest
-            docker stop blog-app || true
-            docker rm blog-app || true
+            docker stop blog-app || true  # Stop the container if it exists
+            docker rm blog-app || true    # Remove the container if it exists
             docker run -d -p 8080:8080 --name blog-app --env-file .env fanzru/blog-app:latest
-          EOF
