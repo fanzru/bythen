@@ -27,17 +27,28 @@ jobs:
           docker build -t fanzru/blog-app .
           docker push fanzru/blog-app
 
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get install -y sshpass
+
       - name: Deploy to VM
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.VM_SSH_KEY }}
+          VM_SSH_USER: ${{ secrets.VM_USERNAME }}
+          VM_IP: ${{ secrets.VM_HOST }}
+          VM_SSH_PASSWORD: ${{ secrets.VM_PASSWORD }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          DATABASE_DSN: ${{ secrets.DATABASE_DSN }}
         run: |
-          echo "$SSH_PRIVATE_KEY" > /tmp/vm_key
-          chmod 600 /tmp/vm_key
-          ssh -i /tmp/vm_key -o StrictHostKeyChecking=no ${{secrets.VM_USERNAME}}@${{secrets.VM_HOST}} \
-            "docker pull fanzru/blog-app && \
-             docker stop blog-app || true && \
-             docker rm blog-app || true && \
-             docker run -d -p 8080:8080 --name blog-app \
-              -e JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} \
-              -e DATABASE_DSN=${{ secrets.DATABASE_DSN }} \
-              fanzru/blog-app"
+          sshpass -p "$VM_SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $VM_SSH_USER@$VM_IP << EOF
+            cd ~/blog-app
+            echo "JWT_SECRET_KEY=$JWT_SECRET_KEY" > .env
+            echo "DATABASE_DSN=$DATABASE_DSN" >> .env
+            docker pull fanzru/blog-app:latest
+            docker stop blog-app || true
+            docker rm blog-app || true
+            docker run -d -p 8080:8080 --name blog-app --env-file .env fanzru/blog-app:latest
+          EOF
