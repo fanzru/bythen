@@ -28,12 +28,6 @@ WORKDIR /app
 # Copy the built Go binary from the builder stage
 COPY --from=builder /app/main .
 
-# Copy .env file if any
-COPY .env ./
-
-# Copy the Swagger documentation files
-COPY docs/swagger /app/docs/swagger
-
 # Expose the application port
 EXPOSE 8080
 
