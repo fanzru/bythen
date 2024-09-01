@@ -72,7 +72,6 @@ func authMiddleware(secretKey string) func(http.Handler) http.Handler {
 			const userIDKey string = "userID"
 			ctx := context.WithValue(r.Context(), userIDKey, claims.UserID)
 			next.ServeHTTP(w, r.WithContext(ctx))
-
 		})
 	}
 }
@@ -94,7 +93,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// Function to load environment variables with default values
+// Function to get environment variables with default values
 func getEnv(key, defaultValue string) string {
 	value := os.Getenv(key)
 	if value == "" {
@@ -104,10 +103,11 @@ func getEnv(key, defaultValue string) string {
 }
 
 func main() {
-	// Load the .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	// Check if .env file exists and load it if it does
+	if _, err := os.Stat(".env"); err == nil {
+		if err := godotenv.Load(); err != nil {
+			log.Println("Error loading .env file")
+		}
 	}
 
 	// Load environment variables
