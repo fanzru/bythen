@@ -11,6 +11,13 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// Error defines model for Error.
+type Error struct {
+	Code    *int    `json:"code,omitempty"`
+	Details *string `json:"details,omitempty"`
+	Message *string `json:"message,omitempty"`
+}
+
 // NewPost defines model for NewPost.
 type NewPost struct {
 	Content string `json:"content"`
@@ -29,8 +36,15 @@ type Post struct {
 
 // UpdatePost defines model for UpdatePost.
 type UpdatePost struct {
-	Content *string `json:"content,omitempty"`
-	Title   *string `json:"title,omitempty"`
+	Content string `json:"content"`
+	Title   string `json:"title"`
+}
+
+// UserRegistration defines model for UserRegistration.
+type UserRegistration struct {
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
 }
 
 // CreatePostJSONRequestBody defines body for CreatePost for application/json ContentType.

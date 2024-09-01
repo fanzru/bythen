@@ -5,7 +5,7 @@
     "version": "1.0.0"
   },
   "paths": {
-    "/login": {
+    "/user/login": {
       "post": {
         "consumes": [
           "application/json"
@@ -27,7 +27,7 @@
           "200": {
             "description": "Successful login",
             "schema": {
-              "$ref": "#/definitions/AuthToken"
+              "$ref": "#/definitions/LoginResponse"
             }
           },
           "400": {
@@ -47,7 +47,7 @@
         "summary": "Login a user"
       }
     },
-    "/register": {
+    "/user/register": {
       "post": {
         "consumes": [
           "application/json"
@@ -82,13 +82,60 @@
     }
   },
   "definitions": {
-    "AuthToken": {
+    "BaseResponse": {
+      "properties": {
+        "code": {
+          "example": "SUCCESS",
+          "type": "string"
+        },
+        "data": {
+          "type": "object"
+        },
+        "serverTime": {
+          "example": 1616048032,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "serverTime",
+        "code",
+        "data"
+      ],
+      "type": "object"
+    },
+    "Error": {
+      "allOf": [
+        {
+          "properties": {
+            "message": {
+              "example": "unexpected error",
+              "type": "string"
+            }
+          },
+          "required": [
+            "message"
+          ],
+          "type": "object"
+        },
+        {
+          "$ref": "#/definitions/BaseResponse"
+        }
+      ]
+    },
+    "LoginResponse": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseResponse"
+        }
+      ],
       "properties": {
         "token": {
-          "description": "Authentication token",
           "type": "string"
         }
       },
+      "required": [
+        "token"
+      ],
       "type": "object"
     },
     "UserLogin": {

@@ -56,7 +56,7 @@ func (h *UserHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		Password: req.Password,
 	})
 	if err != nil {
-		response.WriteErrorResponse(w, "Invalid credentials", err, http.StatusUnauthorized)
+		response.WriteErrorResponse(w, err.Error(), err, http.StatusUnauthorized)
 		return
 	}
 

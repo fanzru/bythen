@@ -60,12 +60,12 @@ func (s *UserService) LoginUser(ctx context.Context, request *model.UserLoginReq
 	// Find the user by email
 	user, err := s.repo.GetUserByEmail(ctx, request.Email)
 	if err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, errors.New("account not found")
 	}
 
 	// Compare the provided password with the stored hashed password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, errors.New("wrong password")
 	}
 
 	// Generate a JWT token

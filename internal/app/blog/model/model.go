@@ -1,8 +1,10 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
-// Post represents a blog post
+// Post represents a blog post in the system
 type Post struct {
 	ID        int64     `json:"id"`
 	Title     string    `json:"title"`
@@ -12,14 +14,24 @@ type Post struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// NewPost represents the request payload for creating a new blog post
-type NewPost struct {
+// CreatePostRequest represents the request payload for creating a new post
+type CreatePostRequest struct {
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }
 
-// UpdatePost represents the request payload for updating a blog post
-type UpdatePost struct {
-	Title   string `json:"title"`
-	Content string `json:"content"`
+// UpdatePostRequest represents the request payload for updating a post
+type UpdatePostRequest struct {
+	Title   string `json:"title,omitempty"`
+	Content string `json:"content,omitempty"`
+}
+
+// PostResponse represents the response payload for a post
+type PostResponse struct {
+	ID        int64     `json:"id"`
+	Title     string    `json:"title"`
+	Content   string    `json:"content"`
+	AuthorID  int64     `json:"author_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

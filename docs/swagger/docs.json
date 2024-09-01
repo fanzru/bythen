@@ -1,53 +1,11 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Blog API",
+    "title": "API Documentation",
     "version": "1.0.0"
   },
   "paths": {
-    "/login": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "user"
-        ],
-        "summary": "Login a user",
-        "operationId": "loginUser",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/UserLogin"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful login",
-            "schema": {
-              "$ref": "#/definitions/AuthToken"
-            }
-          },
-          "400": {
-            "description": "Bad request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        }
-      }
-    },
-    "/posts": {
+    "/blog/posts": {
       "get": {
         "produces": [
           "application/json"
@@ -66,6 +24,12 @@
                 "$ref": "#/definitions/Post"
               }
             }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       },
@@ -76,6 +40,9 @@
           }
         ],
         "consumes": [
+          "application/json"
+        ],
+        "produces": [
           "application/json"
         ],
         "tags": [
@@ -95,21 +62,33 @@
         ],
         "responses": {
           "201": {
-            "description": "Post created"
+            "description": "Post created successfully",
+            "schema": {
+              "$ref": "#/definitions/Post"
+            }
           },
           "400": {
-            "description": "Bad request"
+            "description": "Invalid request body",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       }
     },
-    "/posts/{id}": {
+    "/blog/posts/{id}": {
       "get": {
         "produces": [
           "application/json"
@@ -122,6 +101,7 @@
         "parameters": [
           {
             "type": "integer",
+            "format": "int64",
             "name": "id",
             "in": "path",
             "required": true
@@ -135,12 +115,29 @@
             }
           },
           "404": {
-            "description": "Post not found"
+            "description": "Post not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       },
       "put": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
         "consumes": [
+          "application/json"
+        ],
+        "produces": [
           "application/json"
         ],
         "tags": [
@@ -151,6 +148,7 @@
         "parameters": [
           {
             "type": "integer",
+            "format": "int64",
             "name": "id",
             "in": "path",
             "required": true
@@ -166,20 +164,46 @@
         ],
         "responses": {
           "200": {
-            "description": "Post updated"
+            "description": "Post updated successfully",
+            "schema": {
+              "$ref": "#/definitions/Post"
+            }
           },
           "400": {
-            "description": "Bad request"
+            "description": "Invalid request body",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           },
           "404": {
-            "description": "Post not found"
+            "description": "Post not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       },
       "delete": {
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
         "tags": [
           "post"
         ],
@@ -188,6 +212,7 @@
         "parameters": [
           {
             "type": "integer",
+            "format": "int64",
             "name": "id",
             "in": "path",
             "required": true
@@ -195,10 +220,19 @@
         ],
         "responses": {
           "204": {
-            "description": "Post deleted"
+            "description": "Post deleted successfully"
           },
           "404": {
-            "description": "Post not found"
+            "description": "Post not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       }
@@ -216,6 +250,7 @@
         "parameters": [
           {
             "type": "integer",
+            "format": "int64",
             "name": "id",
             "in": "path",
             "required": true
@@ -250,6 +285,7 @@
         "parameters": [
           {
             "type": "integer",
+            "format": "in64",
             "name": "id",
             "in": "path",
             "required": true
@@ -279,7 +315,49 @@
         }
       }
     },
-    "/register": {
+    "/user/login": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "user"
+        ],
+        "summary": "Login a user",
+        "operationId": "loginUser",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserLogin"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful login",
+            "schema": {
+              "$ref": "#/definitions/LoginResponse"
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/user/register": {
       "post": {
         "consumes": [
           "application/json"
@@ -314,20 +392,33 @@
     }
   },
   "definitions": {
-    "AuthToken": {
+    "BaseResponse": {
       "type": "object",
+      "required": [
+        "serverTime",
+        "code",
+        "data"
+      ],
       "properties": {
-        "token": {
-          "description": "Authentication token",
-          "type": "string"
+        "code": {
+          "type": "string",
+          "example": "SUCCESS"
+        },
+        "data": {
+          "type": "object"
+        },
+        "serverTime": {
+          "type": "integer",
+          "example": 1616048032
         }
       }
     },
     "Comment": {
       "type": "object",
       "properties": {
-        "author_name": {
-          "type": "string"
+        "author_id": {
+          "type": "integer",
+          "format": "int64"
         },
         "content": {
           "type": "string"
@@ -337,23 +428,54 @@
           "format": "date-time"
         },
         "id": {
-          "type": "integer"
+          "type": "integer",
+          "format": "int64"
         },
         "post_id": {
-          "type": "integer"
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "example": 500
+        },
+        "details": {
+          "type": "string",
+          "example": "Detailed error description"
+        },
+        "message": {
+          "type": "string",
+          "example": "unexpected error"
+        }
+      }
+    },
+    "LoginResponse": {
+      "type": "object",
+      "required": [
+        "token"
+      ],
+      "allOf": [
+        {
+          "$ref": "#/definitions/BaseResponse"
+        }
+      ],
+      "properties": {
+        "token": {
+          "type": "string"
         }
       }
     },
     "NewComment": {
       "type": "object",
       "required": [
-        "author_name",
         "content"
       ],
       "properties": {
-        "author_name": {
-          "type": "string"
-        },
         "content": {
           "type": "string"
         }
@@ -401,6 +523,10 @@
     },
     "UpdatePost": {
       "type": "object",
+      "required": [
+        "title",
+        "content"
+      ],
       "properties": {
         "content": {
           "type": "string"
