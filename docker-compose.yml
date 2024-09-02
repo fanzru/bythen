@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_DBPASS}  # Root password is the same as the DB password
+      MYSQL_DATABASE: ${MYSQL_DBNAME}
+      MYSQL_USER: ${MYSQL_DBUSER}
+      MYSQL_PASSWORD: ${MYSQL_DBPASS}
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - "3306:3306" 
+    volumes:
+      - mysql_data:/var/lib/mysql
+    env_file:
+      - .env
+
+  blog-app:
+    image: fanzru/blog-app:latest
+    container_name: blog-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    environment:
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      DATABASE_DSN: "${MYSQL_DBUSER}:${MYSQL_DBPASS}@tcp(${MYSQL_HOST}:${MYSQL_PORT})/${MYSQL_DBNAME}?parseTime=true"
+    volumes:
+      - ./logs:/app/logs
+    env_file:
+      - .env
+
+volumes:
+  mysql_data:
